@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>印刷できる脳トレドリル 第1号｜ロジック探偵社</title>
+<meta name="description" content="数字さがし・迷路・1つだけ違う字。A4で1枚、答えつきの脳トレドリル。無料で印刷できます。">
+<style>
+:root{--bg:#F3EAD6;--card:#FBF6E9;--ink:#33291C;--sub:#7A6A52;--red:#E0261C}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;line-height:1.7}
+main{max-width:560px;margin:0 auto;padding:14px 16px 30px}
+.back{color:var(--sub);text-decoration:none;font-weight:700;font-size:15px}
+h1{font-size:clamp(24px,6.8vw,31px);margin:10px 0 2px}
+.lead{font-size:clamp(16px,4.5vw,19px);color:var(--sub);margin:0 0 14px;font-weight:600}
+.sheet{display:block;width:100%;height:auto;border:3px solid var(--ink);border-radius:10px;background:#fff}
+a.btn{display:block;text-align:center;font-weight:800;font-size:clamp(20px,5.6vw,25px);color:#fff;background:var(--red);border-radius:16px;padding:16px 10px;margin:16px 0 8px;text-decoration:none;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+a.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+ul{padding-left:1.2em;margin:10px 0;font-size:clamp(16px,4.4vw,18px)}
+.small{font-size:14px;color:var(--sub);margin-top:18px;text-align:center}
+.small a{color:var(--ink);font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../" data-c="back">← ロジック探偵社</a>
+  <h1>脳トレドリル 第1号</h1>
+  <p class="lead">A4で1枚。表が問題、裏が答えです。</p>
+  <img class="sheet" src="drill_01_front.png" alt="ドリルの見本: 数字さがし・迷路・1つだけ違う字" width="794" height="1123">
+  <a class="btn" href="drill_01.pdf" data-c="drill_pdf">ドリルを開く（無料）</a>
+  <ul>
+    <li>ご家庭のプリンターで、A4の紙に印刷できます。</li>
+    <li>印刷やコピーは自由です。ご家族やお仲間の集まりでもどうぞ。</li>
+    <li>印刷しなくても、画面でそのまま解けます。</li>
+  </ul>
+  <p class="small">動く問題は毎日 12:35 に <a href="https://www.instagram.com/logictanteisha/" data-c="ig">Instagram @logictanteisha</a> で。</p>
+</main>
+<script>
+var COUNT_URL="https://storage.googleapis.com/ltd-count-b042e6a9/";
+function ping(n){if(!COUNT_URL)return;var u=COUNT_URL+n+".gif?"+Date.now();try{if(window.fetch){fetch(u,{mode:"no-cors",keepalive:true,cache:"no-store"}).catch(function(){})}else{new Image().src=u}}catch(e){}}
+Array.prototype.forEach.call(document.querySelectorAll("[data-c]"),function(a){a.addEventListener("click",function(){ping(a.getAttribute("data-c"))})});
+ping("open_drill");
+</script>
+</body>
+</html>

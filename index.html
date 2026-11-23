@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ロジック探偵社｜目と頭の体操</title>
+<meta name="description" content="赤い玉を目で追うゲームと、印刷できる脳トレドリル。無料・登録なし。Instagram「ロジック探偵社」の遊べる版です。">
+<meta property="og:title" content="ロジック探偵社｜目と頭の体操">
+<meta property="og:description" content="赤い玉を目で追うゲームと、印刷できる脳トレドリル。無料・登録なし。">
+<style>
+:root{--bg:#F3EAD6;--card:#FBF6E9;--ink:#33291C;--sub:#7A6A52;--red:#E0261C}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;line-height:1.7}
+main{max-width:560px;margin:0 auto;padding:22px 16px 30px}
+h1{font-size:clamp(26px,7.4vw,34px);margin:6px 0 2px;letter-spacing:.02em}
+.lead{font-size:clamp(16px,4.5vw,19px);color:var(--sub);margin:0 0 18px;font-weight:600}
+a.card{display:block;background:var(--card);border:3px solid var(--ink);border-radius:20px;padding:18px 18px 16px;margin:0 0 16px;text-decoration:none;color:inherit;box-shadow:0 5px 0 rgba(51,41,28,.9)}
+a.card:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(51,41,28,.9)}
+.card .tag{display:inline-block;font-size:14px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;padding:2px 12px}
+.card .tag.k{background:var(--ink)}
+.card h2{font-size:clamp(21px,5.9vw,27px);margin:8px 0 2px;white-space:nowrap}
+.card p{margin:0;font-size:clamp(16px,4.4vw,18px);color:var(--sub);font-weight:600}
+.card .go{margin-top:12px;font-size:clamp(18px,5vw,21px);font-weight:800;color:var(--red)}
+.art{float:right;width:84px;height:84px;margin:-2px 0 4px 8px}
+.small{font-size:14px;color:var(--sub);margin-top:22px;text-align:center}
+.small a{color:var(--ink);font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <h1>ロジック探偵社</h1>
+  <p class="lead">目と頭の体操。無料・登録なしで、すぐ遊べます。</p>
+
+  <a class="card" href="play/" data-c="play_card">
+    <svg class="art" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#33291C" stroke-width="3"/><circle cx="30" cy="38" r="7" fill="#33291C"/><circle cx="62" cy="28" r="7" fill="#33291C"/><circle cx="72" cy="58" r="7" fill="#33291C"/><circle cx="40" cy="70" r="7" fill="#33291C"/><circle cx="50" cy="48" r="7" fill="#E0261C"/></svg>
+    <span class="tag">ゲーム</span>
+    <h2>赤い玉を目で追え</h2>
+    <p>色が消えても、目を離さないで。止まったら赤だった玉を押します。レベル10まで。</p>
+    <div class="go">▶ 遊んでみる</div>
+  </a>
+
+  <a class="card" href="drill/" data-c="drill_card">
+    <svg class="art" viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="6" width="72" height="88" rx="4" fill="#fff" stroke="#33291C" stroke-width="3"/><g stroke="#33291C" stroke-width="3"><path d="M24 22h52M24 34h52M24 46h30"/><path d="M24 58h52v26H24zM37 58v13M50 71v13M63 58v13M24 71h13M50 71h26" fill="none"/></g></svg>
+    <span class="tag k">印刷して使う・第1号</span>
+    <h2>脳トレドリル</h2>
+    <p>数字さがし・迷路・1つだけ違う字。A4で1枚、答えつき。ご家族やお仲間とどうぞ。</p>
+    <div class="go">▶ ドリルを見る</div>
+  </a>
+
+  <p class="small">動く問題は毎日 12:35 に <a href="https://www.instagram.com/logictanteisha/" data-c="ig">Instagram @logictanteisha</a> で。<br>このページは、押された回数だけを数えています（個人の情報は集めていません）。</p>
+</main>
+<script>
+var COUNT_URL="https://storage.googleapis.com/ltd-count-b042e6a9/";
+function ping(n){if(!COUNT_URL)return;var u=COUNT_URL+n+".gif?"+Date.now();try{if(window.fetch){fetch(u,{mode:"no-cors",keepalive:true,cache:"no-store"}).catch(function(){})}else{new Image().src=u}}catch(e){}}
+Array.prototype.forEach.call(document.querySelectorAll("[data-c]"),function(a){a.addEventListener("click",function(){ping(a.getAttribute("data-c"))})});
+ping("open_home");
+</script>
+</body>
+</html>

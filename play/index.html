@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>赤い玉を目で追え｜ロジック探偵社</title>
+<meta name="description" content="赤い玉を目で追う、目と頭の体操。色が消えたあとも追い続けて、止まったら赤だった玉を押してください。無料・登録なし。">
+<style>
+:root{--bg:#F3EAD6;--arena:#FBF6E9;--ink:#33291C;--sub:#7A6A52;--red:#E0261C;--ok:#1F8A4C;--line:#33291C}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif}
+body{display:flex;flex-direction:column;align-items:center;min-height:100dvh;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+header{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:center;padding:10px 4px 0;font-size:15px;color:var(--sub)}
+header a{color:var(--sub);text-decoration:none;font-weight:700}
+header b{color:var(--ink);font-size:18px}
+#msg{margin:10px 0 2px;font-size:clamp(19px,5.5vw,29px);font-weight:800;text-align:center;min-height:1.5em;letter-spacing:0;white-space:nowrap}
+#sub{font-size:clamp(15px,4.2vw,19px);color:var(--sub);text-align:center;min-height:1.5em;font-weight:600}
+#wrap{width:min(94vw,560px,62dvh);aspect-ratio:1;margin:8px 0;position:relative;touch-action:none}
+canvas{width:100%;height:100%;display:block}
+#panel{width:100%;max-width:560px;text-align:center;min-height:120px}
+button{font:inherit;font-weight:800;font-size:clamp(20px,5.6vw,26px);color:#fff;background:var(--ink);border:0;border-radius:16px;padding:16px 28px;min-width:72%;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+button.red{background:var(--red)}
+#note{margin-top:12px;font-size:15px;color:var(--sub);line-height:1.7}
+#note a{color:var(--ink);font-weight:700}
+footer{margin-top:auto;padding:14px 0 10px;font-size:13px;color:var(--sub);text-align:center}
+footer a{color:var(--sub)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header><a href="../" data-c="back">← ロジック探偵社</a><span>レベル <b id="lv">1</b>　最高 <b id="best">1</b></span></header>
+<div id="msg">赤い玉を、目で追ってください。</div>
+<div id="sub">途中で、色が消えます。</div>
+<div id="wrap"><canvas id="cv" width="1000" height="1000" aria-label="玉が動く盤"></canvas></div>
+<div id="panel">
+  <button id="go" class="red">はじめる</button>
+  <div id="note">色が消えても、目を離さないでください。<br>止まったら、<b>赤だった玉</b>を指で押します。</div>
+</div>
+<footer>毎日 12:35 に新しい1問 ｜ <a href="https://www.instagram.com/logictanteisha/" data-c="ig">Instagram @logictanteisha</a></footer>
+
+<script>
+(function(){
+"use strict";
+// ── 難しさ（レベル1〜10）: 玉の数・速さ（盤の直径を1000とした時の1秒あたりの移動）・追う秒数
+var LEVELS=[
+ {n:5, v:150,t:6},{n:6, v:170,t:7},{n:8, v:185,t:8},{n:10,v:200,t:9},{n:12,v:215,t:10},
+ {n:14,v:230,t:10},{n:16,v:245,t:11},{n:18,v:260,t:12},{n:20,v:275,t:12},{n:20,v:310,t:12}];
+var RED_SEC=3.0, FADE_SEC=0.6, C=500, RAD=470, STEP=1/120;
+var cv=document.getElementById("cv"), g=cv.getContext("2d");
+var $=function(id){return document.getElementById(id)};
+var store={get:function(k,d){try{var v=localStorage.getItem(k);return v===null?d:+v}catch(e){return d}},
+           set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+var level=Math.min(LEVELS.length,Math.max(1,store.get("rb_level",1))), best=Math.max(level,store.get("rb_best",1));
+var S={phase:"idle",balls:[],target:0,t:0,picked:-1,seed:0,r:30,miss:0};
+
+function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function ballR(n){return n<=8?40:n<=12?34:n<=16?30:27}
+
+function setup(seed){
+  var L=LEVELS[level-1], rnd=rng(seed), r=ballR(L.n), balls=[], guard=0;
+  while(balls.length<L.n && guard++<20000){
+    var a=rnd()*Math.PI*2, d=Math.sqrt(rnd())*(RAD-r-6), x=C+Math.cos(a)*d, y=C+Math.sin(a)*d, ok=true;
+    for(var i=0;i<balls.length;i++){var dx=balls[i].x-x,dy=balls[i].y-y;if(dx*dx+dy*dy<(2.6*r)*(2.6*r)){ok=false;break}}
+    if(!ok)continue;
+    var th=rnd()*Math.PI*2, sp=L.v*(0.85+rnd()*0.3);
+    balls.push({x:x,y:y,vx:Math.cos(th)*sp,vy:Math.sin(th)*sp,sp:sp});
+  }
+  S.balls=balls;S.r=r;S.target=Math.floor(rnd()*balls.length);S.t=0;S.picked=-1;S.seed=seed;S.L=L;S.acc=0;
+}
+
+function step(dt){
+  var b=S.balls,r=S.r,i,j;
+  for(i=0;i<b.length;i++){
+    var p=b[i];p.x+=p.vx*dt;p.y+=p.vy*dt;
+    var dx=p.x-C,dy=p.y-C,d=Math.sqrt(dx*dx+dy*dy),lim=RAD-r;
+    if(d>lim){var nx=dx/d,ny=dy/d,vn=p.vx*nx+p.vy*ny;if(vn>0){p.vx-=2*vn*nx;p.vy-=2*vn*ny}p.x=C+nx*lim;p.y=C+ny*lim}
+  }
+  for(i=0;i<b.length;i++)for(j=i+1;j<b.length;j++){
+    var A=b[i],B=b[j],ex=B.x-A.x,ey=B.y-A.y,dd=ex*ex+ey*ey,m=2*r;
+    if(dd<m*m&&dd>0){var e=Math.sqrt(dd),ux=ex/e,uy=ey/e,rel=(B.vx-A.vx)*ux+(B.vy-A.vy)*uy;
+      if(rel<0){A.vx+=rel*ux;A.vy+=rel*uy;B.vx-=rel*ux;B.vy-=rel*uy}
+      var o=(m-e)/2;A.x-=ux*o;A.y-=uy*o;B.x+=ux*o;B.y+=uy*o}
+  }
+  // 壁ぎわで3個以上が重なった時の押し戻し（位置だけ・2回）。壁→玉の順で直すと、止まった瞬間に重なりが残らない
+  for(var k=0;k<2;k++){
+    for(i=0;i<b.length;i++){var w=b[i],wx=w.x-C,wy=w.y-C,wd=Math.sqrt(wx*wx+wy*wy),wl=RAD-r;if(wd>wl){w.x=C+wx/wd*wl;w.y=C+wy/wd*wl}}
+    for(i=0;i<b.length;i++)for(j=i+1;j<b.length;j++){var P=b[i],Q=b[j],fx=Q.x-P.x,fy=Q.y-P.y,f2=fx*fx+fy*fy,mm=2*r;
+      if(f2<mm*mm&&f2>0){var f=Math.sqrt(f2),oo=(mm-f)/2;P.x-=fx/f*oo;P.y-=fy/f*oo;Q.x+=fx/f*oo;Q.y+=fy/f*oo}}
+  }
+  // 速さは玉ごとに一定に保つ（ぶつかるたびに1個だけ速くなって追えなくなるのを防ぐ）
+  for(i=0;i<b.length;i++){var q=b[i],sv=Math.sqrt(q.vx*q.vx+q.vy*q.vy);if(sv>0){q.vx*=q.sp/sv;q.vy*=q.sp/sv}}
+  S.t+=dt;
+}
+// 止める条件: 追う時間が過ぎ、赤だった玉が他の玉から十分に離れている（押し間違えないため）。最長でも3秒だけ延ばす
+function clearAround(){var b=S.balls,T=b[S.target],r=S.r;for(var i=0;i<b.length;i++){if(i===S.target)continue;var dx=b[i].x-T.x,dy=b[i].y-T.y;if(dx*dx+dy*dy<(2.5*r)*(2.5*r))return false}return true}
+function shouldStop(){var end=RED_SEC+FADE_SEC+S.L.t;return S.t>=end&&(clearAround()||S.t>=end+3)}
+
+function draw(){
+  var b=S.balls,r=S.r,i;
+  g.clearRect(0,0,1000,1000);
+  g.beginPath();g.arc(C,C,RAD,0,Math.PI*2);g.fillStyle="#FBF6E9";g.fill();g.lineWidth=5;g.strokeStyle="#33291C";g.stroke();
+  for(i=0;i<b.length;i++){
+    var col="#33291C";
+    if(i===S.target){
+      if(S.phase==="run"){var k=S.t<RED_SEC?1:Math.max(0,1-(S.t-RED_SEC)/FADE_SEC);if(k>0)col=mix(k)}
+      if(S.phase==="result"||S.phase==="idle")col="#E0261C";
+    }
+    g.beginPath();g.arc(b[i].x,b[i].y,r,0,Math.PI*2);g.fillStyle=col;g.fill();
+    if(S.phase==="result"&&i===S.picked){g.lineWidth=9;g.strokeStyle=(i===S.target)?"#1F8A4C":"#8a7a60";g.beginPath();g.arc(b[i].x,b[i].y,r+12,0,Math.PI*2);g.stroke()}
+  }
+}
+function mix(k){var a=[224,38,28],c=[51,41,28];return"rgb("+Math.round(c[0]+(a[0]-c[0])*k)+","+Math.round(c[1]+(a[1]-c[1])*k)+","+Math.round(c[2]+(a[2]-c[2])*k)+")"}
+
+var last=0;
+function frame(ts){
+  if(S.phase==="run"){
+    var dt=Math.min(0.05,(ts-last)/1000||0);last=ts;S.acc+=dt;
+    while(S.acc>=STEP){step(STEP);S.acc-=STEP;if(shouldStop()){toAsk();break}}
+    if(S.phase==="run"){
+      if(S.t>=RED_SEC+FADE_SEC&&!S.saidFade){S.saidFade=true;say("色が消えました。目を離さないで。","頼れるのは、動きだけ。")}
+      requestAnimationFrame(frame)
+    }
+  }
+  draw();
+}
+function say(a,b){$("msg").textContent=a;$("sub").textContent=b||""}
+function hud(){$("lv").textContent=level;$("best").textContent=best}
+
+function start(seed){
+  setup(seed===undefined?(Date.now()^(Math.random()*1e9))>>>0:seed);
+  S.phase="run";S.saidFade=false;last=performance.now();
+  say("赤い玉を、目で追ってください。","途中で、色が消えます。");
+  $("go").classList.add("hide");$("note").classList.add("hide");hud();ping("play");
+  requestAnimationFrame(frame);
+}
+function toAsk(){S.phase="ask";say("赤だったのは、どれ？","玉を指で押してください。");var m=$("msg");m.style.color="#E0261C";draw()}
+function pick(i){
+  if(S.phase!=="ask")return;
+  S.picked=i;S.phase="result";$("msg").style.color="";
+  var ok=(i===S.target),btn=$("go");
+  if(ok){
+    S.miss=0;
+    if(level<LEVELS.length){level++;say("正解！","次はレベル "+level+"（玉 "+LEVELS[level-1].n+" 個）");btn.textContent="次のレベルへ"}
+    else{say("全レベル制覇！","レベル10をもう一度、遊べます。");btn.textContent="もう一度"}
+    best=Math.max(best,level);ping("win");
+  }else{
+    S.miss++;
+    if(S.miss>=2&&level>1){level--;S.miss=0;say("おしい。赤い輪が正解です。","レベル "+level+" に戻って、もう一度。")}
+    else say("おしい。赤い玉が正解でした。","同じレベルで、もう一度。");
+    btn.textContent="もう一度";ping("miss");
+  }
+  store.set("rb_level",level);store.set("rb_best",best);hud();
+  btn.classList.remove("hide");draw();
+}
+function pos(ev){var q=cv.getBoundingClientRect(),p=ev.touches?ev.touches[0]:ev;return{x:(p.clientX-q.left)/q.width*1000,y:(p.clientY-q.top)/q.height*1000}}
+function onTap(ev){
+  if(S.phase!=="ask")return;ev.preventDefault();
+  var p=pos(ev),b=S.balls,bi=-1,bd=1e18;
+  for(var i=0;i<b.length;i++){var dx=b[i].x-p.x,dy=b[i].y-p.y,d=dx*dx+dy*dy;if(d<bd){bd=d;bi=i}}
+  if(bi>=0&&bd<=(S.r*1.9)*(S.r*1.9))pick(bi);
+}
+cv.addEventListener("pointerdown",onTap);
+$("go").addEventListener("click",function(){start()});
+
+// ── 押された回数だけを数える（個人の情報は送らない）。COUNT_URL が空の間は何もしない
+var COUNT_URL="https://storage.googleapis.com/ltd-count-b042e6a9/";
+function ping(n){if(!COUNT_URL)return;var u=COUNT_URL+n+".gif?"+Date.now();try{if(window.fetch){fetch(u,{mode:"no-cors",keepalive:true,cache:"no-store"}).catch(function(){})}else{new Image().src=u}}catch(e){}}
+Array.prototype.forEach.call(document.querySelectorAll("[data-c]"),function(a){a.addEventListener("click",function(){ping(a.getAttribute("data-c"))})});
+ping("open_play");
+
+// 最初の画面: 止まった盤を見せる
+setup(20261123);S.phase="idle";hud();draw();
+// 検査用（自動テストが盤の中身を読む）
+window.__rb={S:S,start:start,pick:pick,step:step,shouldStop:shouldStop,LEVELS:LEVELS,setLevel:function(n){level=n;hud()},getLevel:function(){return level},clearAround:clearAround,setup:setup};
+})();
+</script>
+</body>
+</html>
